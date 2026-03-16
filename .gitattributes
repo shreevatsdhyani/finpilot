@@ -1,0 +1,10 @@
+# Normalize line endings for cross-platform contributors
+* text=auto
+
+# Keep common script/binary types explicit
+*.ps1 text eol=crlf
+*.sh text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
