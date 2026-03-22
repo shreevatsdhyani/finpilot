@@ -1,4 +1,4 @@
-"""Forecast service — simple arithmetic projection."""
+"""Forecast service — enhanced projection with cumulative tracking."""
 
 from __future__ import annotations
 
@@ -11,25 +11,31 @@ def generate_forecast(
     avg_expense: float,
     horizon: int,
 ) -> list[dict]:
-    """Project income/expense for *horizon* months using simple linear model.
+    """Project income/expense for *horizon* months.
 
+    Includes cumulative savings tracking and seasonal factors.
     Risk month = any month where projected expenses exceed income.
     """
     now = datetime.now(timezone.utc)
     months: list[dict] = []
+    cumulative = 0.0
+
     for i in range(1, horizon + 1):
         future = now + relativedelta(months=i)
-        # Add a small random-ish seasonal bump
+        # Seasonal bumps: March (year-end bonus), September (festive), December (year-end)
         seasonal_factor = 1.0 + (0.02 if future.month in (3, 9, 12) else 0.0)
         proj_income = round(avg_income * seasonal_factor, 2)
-        proj_expense = round(avg_expense * (1 + 0.01 * i), 2)  # slight growth
+        # Expenses grow slightly each month (inflation proxy)
+        proj_expense = round(avg_expense * (1 + 0.01 * i), 2)
         net = round(proj_income - proj_expense, 2)
+        cumulative = round(cumulative + net, 2)
         months.append(
             {
                 "month": future.strftime("%Y-%m"),
                 "projected_income": proj_income,
                 "projected_expenses": proj_expense,
                 "net": net,
+                "cumulative_savings": cumulative,
                 "risk": net < 0,
             }
         )

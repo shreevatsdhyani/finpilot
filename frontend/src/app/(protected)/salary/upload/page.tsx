@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useReadiness } from "@/context/readiness-context";
 import { uploadSalary } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function SalaryUploadPage() {
   const router = useRouter();
+  const { refresh } = useReadiness();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,6 +24,8 @@ export default function SalaryUploadPage() {
     setLoading(true);
     try {
       const doc = await uploadSalary(file);
+      toast.success("Salary slip uploaded. Review extracted fields to verify income.");
+      await refresh();
       router.push(`/salary/verify/${doc.id}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed");

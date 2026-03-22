@@ -6,9 +6,19 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=6)
-    name: str = Field(..., min_length=1)
+    email: EmailStr = Field(..., description="User email")
+    password: str = Field(..., min_length=6, description="User login password")
+    name: str = Field(..., min_length=1, description="Display name")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "email": "user@example.com",
+                "password": "secret123",
+                "name": "User Name",
+            }
+        }
+    }
 
 
 class LoginRequest(BaseModel):
@@ -25,3 +35,7 @@ class UserOut(BaseModel):
     id: str
     email: str
     name: str
+
+
+class UpdateUserRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, description="Updated display name")

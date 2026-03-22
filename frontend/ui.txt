@@ -1,0 +1,757 @@
+FinPilot AI Frontend UI Specification and Delivery Roadmap
+
+Product Positioning
+FinPilot AI should feel like a premium personal finance workstation rather than a generic dashboard. The interface should balance trust, clarity, and analytical depth. It should look suitable for salary earners who want actionable planning, local privacy, transparent recommendations, and a strong sense of control over their financial data.
+
+Primary Market Assumption
+- Region: India-first
+- Currency: INR by default
+- Locale: en-IN
+- Product tone: calm, professional, transparent, practical
+
+Core Experience Principles
+1. Trust first
+   Every important number should hint at where it came from, when it was last updated, and whether it is observed, estimated, or simulated.
+
+2. One clear next step per screen
+   Each page should have one dominant CTA. Secondary actions can exist, but there should always be a clear next move.
+
+3. Local-first privacy
+   The app should emphasize export, retention control, and deletion of local data. It should never feel like a surveillance or sharing product.
+
+4. Explainability by default
+   Recommendations, summaries, assistant answers, and forecasts should expose evidence, assumptions, confidence, and audit paths.
+
+5. Dense but readable
+   The UI should support analytical users. That means more information can be shown, but hierarchy, spacing, grouping, and labels must keep it readable.
+
+6. Great empty states
+   New users will often start with no data. Empty states should guide setup and make the system feel intentionally incomplete rather than broken.
+
+
+Visual Direction
+Theme Direction
+- Primary visual language: white, black, charcoal, and green
+- Secondary support accents: muted mint, steel gray, and soft emerald
+- Charts should use a restrained analytic palette with one highlight green and neutral comparison tones
+
+Light Theme
+- Background: warm white or very pale gray-green
+- Surface: white with subtle tint
+- Primary: deep green
+- Accent: mint or cool green-gray
+- Text primary: near-black
+- Text secondary: slate/gray
+- Border: pale gray-green
+
+Dark Theme
+- Background: near-black or forest-charcoal
+- Surface: charcoal/graphite
+- Primary: rich green
+- Accent: mint-teal glow used sparingly
+- Text primary: off-white
+- Text secondary: muted gray-green
+- Border: dark olive-gray
+
+Visual Behavior
+- Use gradients, glass-like soft panels, and atmospheric background layers without making the app flashy
+- Motion should be subtle: card hover lift, chart reveal, panel fade-in, skeleton shimmer
+- Border radius should be modern and slightly soft, not overly rounded everywhere
+- Shadows should be restrained and layered to create depth
+
+Typography
+- Modern sans stack is acceptable
+- Headings should feel intentional and financial, not playful
+- Large KPI numbers should be highly legible and aligned for scanning
+
+Charts
+- Use Recharts throughout
+- Charts must include:
+  - direct labels or strong legends
+  - units on axes/tooltips
+  - readable contrast in both themes
+  - explicit assumptions for forecasts/projections
+- Recommended chart types:
+  - line chart for actual vs forecast trends
+  - stacked bars for cashflow breakdown
+  - donut or radial charts for allocation and completion
+  - comparison bars for scenarios
+  - area charts for projection bands and confidence ranges
+
+
+Global Layout
+Left Sidebar Navigation Order
+1. Dashboard
+2. Salary Slips (OCR)
+3. Cashflow
+4. Scenarios
+5. Investments
+6. AI Assistant
+7. Policies
+8. News
+9. Audit
+10. Settings
+
+Top Header
+- Environment badge: Local mode
+- Sticky context bar under header
+- Export report button
+- Theme switcher
+- Profile menu
+
+Sticky Context Bar
+Always visible on protected pages. Should include:
+- Income source and date range from salary slips
+- Expenses baseline last updated date
+- Active scenario banner if one is active
+- Risk profile chip
+- Data freshness chips for forecast and recommendations
+
+Context Bar Behavior
+- If data is missing, show setup prompts instead of blank labels
+- Example: Income source: No salary slips yet
+
+
+Cross-App Reusable UI Patterns
+1. Trust strip
+   A compact component that can show:
+   - Updated date
+   - Source type
+   - Confidence
+   - Audit link
+
+2. Empty state card
+   Each empty state should contain:
+   - a direct explanation of why the section is empty
+   - the next action CTA
+   - optional secondary guidance
+
+3. Explainability panel
+   Reusable panel showing:
+   - Why this exists
+   - Inputs used
+   - Assumptions
+   - Confidence
+   - Sources / Evidence
+   - Audit link
+
+4. KPI card
+   Structure:
+   - label
+   - value with units
+   - change indicator or confidence chip
+   - “Edit inputs” or “View detail” action
+
+5. Audit entry reference
+   Compact inline component used in Assistant, Recommendations, News summaries, Forecasts
+
+6. Skeleton states
+   Needed for:
+   - page headers
+   - KPI cards
+   - charts
+   - tables
+   - assistant messages
+
+7. Error states
+   Friendly but serious finance-oriented error states:
+   - failed to load data
+   - failed to generate forecast
+   - OCR extraction issue
+   - assistant retrieval unavailable
+
+
+Page Specifications
+
+1. Dashboard
+Purpose
+- Show current financial position
+- Show most important next step
+- Make the system feel intelligent and alive
+
+Required Sections
+- KPI strip:
+  - Monthly income
+  - Monthly expenses
+  - Net savings
+  - Safe-to-invest
+  - Active goals
+- Primary insight card:
+  - “Your next best action”
+  - one CTA only
+- Income vs expenses chart, 6 months
+- Expense breakdown chart
+- Risk months panel
+- Goals progress section
+- Freshness and trust row
+
+Empty State Logic
+- No salary docs: CTA to upload salary slip
+- Salary exists but no expenses: CTA to add monthly expenses
+- Salary + expenses exist but no forecast: CTA to generate 6-month forecast
+- Forecast exists but no goals: CTA to add first goal
+
+Make It Work
+- Data source:
+  - GET /v1/dashboard/summary
+  - GET salary list if richer breakdown needed
+  - GET expenses if chart data needed
+  - GET goals if progress cards needed
+  - GET forecast list if trend/risk chart needed
+- Current backend summary supports empty-state metrics but richer dashboard will likely need page-level aggregation from multiple endpoints.
+
+Filled State Experience
+- User sees salary-informed income
+- Expense categories appear visually
+- Forecast risk months are called out with reason tags
+- Goals show projected completion timing
+
+
+2. Salary Slips (OCR)
+Purpose
+- Convert payslips into trusted income data
+- Make OCR feel controllable and auditable
+
+Required Views
+- Salary list page
+- Upload page
+- Verify page
+
+Salary List Page
+- Summary cards:
+  - Avg monthly income
+  - Avg deductions
+  - Docs processed
+- Table columns:
+  - filename
+  - month
+  - gross
+  - net
+  - deductions
+  - status
+  - actions
+
+Upload Page
+- Drag/drop upload zone
+- File format guidance
+- Timeline state:
+  - upload
+  - OCR
+  - extracted
+- Verify now CTA after success
+
+Verify Page
+- Document preview panel
+- Extracted fields form
+- Confidence chips per field
+- Confirm and Save CTA
+
+Make It Work
+- Existing endpoints:
+  - POST /v1/salary/upload
+  - GET /v1/salary
+  - GET /v1/salary/{id}
+  - GET /v1/salary/{id}/status
+  - POST /v1/salary/verify
+- Likely useful enhancement later:
+  - extracted month normalization
+  - richer field-level confidence payload from backend
+
+Filled State Experience
+- Verified salary docs build confidence in dashboard numbers
+- List supports historical salary analysis
+
+
+3. Cashflow
+Purpose
+- House operational money planning
+- Combine expenses, goals, and forecasts in one workflow area
+
+Structure
+- Tabs:
+  - Forecast
+  - Expenses
+  - Goals
+
+Expenses Tab
+- Category expense form
+- Recurring bills section
+- Monthly baseline save state
+- Last updated date
+
+Goals Tab
+- Emergency fund target widget
+- Add goal modal
+- Goals list with priority, progress, and projected completion
+
+Forecast Tab
+- Horizon selector: 3 / 6 / 12 months
+- Forecast KPI strip
+- Actual vs predicted chart
+- Forecasted expense-by-category chart
+- Risk months list
+- Assumptions and confidence card
+- Generate forecast CTA
+
+Make It Work
+- Existing endpoints:
+  - POST /v1/expenses
+  - GET /v1/expenses
+  - POST /v1/goals
+  - GET /v1/goals
+  - POST /v1/forecast/generate
+  - GET /v1/forecast?horizon=x
+- Potential backend improvements later:
+  - recurring bills model
+  - category summaries endpoint
+  - richer forecast assumptions payload
+
+Filled State Experience
+- User can understand baseline spending
+- Forecast communicates future strain and savings potential
+- Goals feel connected to current financial behavior
+
+
+4. Scenarios
+Purpose
+- Let users test changes before making decisions
+
+Required Features
+- Template scenario cards
+  - Rent +10%
+  - Salary +20%
+  - Add EMI
+  - Large purchase
+- Custom scenario builder
+- Scenario comparison view
+- Active scenario banner and toggle
+
+Comparison Outputs
+- 12-month savings impact
+- Goal completion date shift
+- Risk months count change
+- Chart comparing baseline vs scenarios
+
+Make It Work
+- Existing endpoints:
+  - POST /v1/scenarios
+  - GET /v1/scenarios
+  - POST /v1/scenarios/{id}/activate
+  - GET /v1/scenarios/compare?ids=
+- Likely frontend work:
+  - template payload generation
+  - scenario badges and comparison cards
+
+Filled State Experience
+- User can see tradeoffs clearly, with one active scenario influencing context bar and relevant projections
+
+
+5. Investments
+Purpose
+- Turn savings capacity into a safe, explainable plan
+
+Required Sections
+- Plan summary
+- Risk profile selector
+- Monthly contribution card
+- Expected return range
+- 5-year projection chart
+- Bucket allocation cards:
+  - Emergency fund
+  - Debt payoff
+  - Equity
+  - Debt/FD
+  - Tax-saving
+- Recommendation cards with explainability
+
+Recommendation Card Structure
+- Title
+- Why it matters
+- Triggers from user data
+- Confidence score
+- Evidence / citations
+- View audit button
+
+Make It Work
+- Existing endpoints:
+  - POST /v1/recommendations/generate
+  - GET /v1/recommendations
+  - GET /v1/recommendations/{id}
+- Likely frontend-local calculations:
+  - portfolio projection chart
+  - risk profile selector behavior
+- Potential future backend improvement:
+  - separate plan summary endpoint
+
+Filled State Experience
+- Users understand how safe-to-invest becomes concrete allocation buckets
+- Recommendations are transparent, not black-box advice
+
+
+6. AI Assistant
+Purpose
+- Let users ask natural language finance questions grounded in their data, policies, and news
+
+Required Features
+- Chat thread
+- Suggested prompts aligned to product context
+- Text input
+- Mic button and recording state UI
+- Answer card with:
+  - answer text
+  - sources used
+  - view audit link
+  - explain this plan shortcut
+
+Make It Work
+- Existing endpoints:
+  - POST /v1/assistant/query
+  - POST /v1/voice/query
+- Current backend already returns sources and audit_id, which matches trust-first UI goals well.
+
+Filled State Experience
+- Assistant feels connected to user finances, current scenario, and recent forecasts
+- Every major answer includes evidence and audit trail
+
+
+7. Policies
+Purpose
+- Provide trusted finance guidance corpus behind recommendations and assistant answers
+
+Required Features
+- Search bar
+- Filter tags
+- Policy cards list
+- Detail page with:
+  - summary
+  - collapsible full text
+  - referenced in answers count if available
+  - subscribe button
+
+Make It Work
+- Existing endpoints:
+  - GET /v1/policies
+  - GET /v1/policies/{id}
+  - POST /v1/policies/{id}/subscribe
+
+Filled State Experience
+- Policies feel like a knowledge base that strengthens system trust
+
+
+8. News
+Purpose
+- Connect market and macro updates to the user’s plan
+
+Required Features
+- News cards list
+- Each card actions:
+  - Summarize
+  - Why it matters to me
+  - Ask assistant about this
+- Summary state with citations and audit link
+
+Make It Work
+- Existing endpoints:
+  - GET /v1/news
+  - GET /v1/news/{id}
+  - POST /v1/news/{id}/summarize
+- “Why it matters to me” can initially be a frontend composition using summary + assistant entry point.
+
+Filled State Experience
+- News feels personalized to user risk and plan rather than generic headlines
+
+
+9. Audit
+Purpose
+- Expose traceability for assistant outputs, recommendations, and summaries
+
+Required Features
+- Audit list with type tags
+- Audit detail page with:
+  - inputs
+  - rules triggered
+  - retrieval chunks and scores
+  - final output
+  - timestamp
+
+Make It Work
+- Existing endpoints:
+  - GET /v1/audit
+  - GET /v1/audit/{id}
+- Depending on backend payload richness, frontend may need graceful conditional rendering for missing sections.
+
+Filled State Experience
+- User trusts the system because reasoning is inspectable
+
+
+10. Settings
+Purpose
+- Put control and privacy in the user’s hands
+
+Required Sections
+- Risk profile
+- Currency / locale
+- Privacy toggles:
+  - store salary files
+  - store transcripts
+- Delete local data button
+- Logout button
+
+Make It Work
+- Existing endpoints:
+  - GET /v1/settings
+  - POST /v1/settings
+- Potential future backend improvement:
+  - delete-local-data endpoint
+  - file retention preferences if salary storage becomes configurable server-side
+
+Filled State Experience
+- Settings reinforces privacy, not just appearance preferences
+
+
+11. Auth Views
+Purpose
+- Make entry flow feel high-trust and intentional
+
+Required Features
+- Login page with strong focus on trust and local mode
+- Register page showing controlled signup via approved access credentials
+- Explain clearly that access ID is invite-like and used only for account creation
+
+Make It Work
+- Existing endpoints already done:
+  - POST /v1/auth/register
+  - POST /v1/auth/login
+  - GET /v1/auth/me
+
+
+Data Freshness and Trust Language
+Every analytical page should expose at least one of:
+- Salary updated: dd mmm yyyy
+- Expenses updated: dd mmm yyyy
+- Forecast generated: dd mmm yyyy
+- Recommendation based on data up to: dd mmm yyyy
+- Scenario active: name
+- Confidence: high / medium / low
+
+Avoid language like exact prediction. Prefer:
+- estimated
+- projected
+- based on current inputs
+- confidence medium
+- assumptions editable
+
+
+Frontend Engineering Requirements
+- Next.js App Router
+- Tailwind CSS
+- shadcn/ui primitives
+- Recharts for charts
+- central API client with mock and real mode switch
+- strong typing in src/types/api.ts
+- consistent loading skeletons
+- toast notifications for save/generate/upload actions
+- route-level error boundaries
+- theme support for both dark and light
+
+
+Recommended Folder-Level UI Work Map
+1. Foundation
+   - theme provider
+   - global CSS tokens
+   - layout shell
+   - sidebar/header/context bar
+   - reusable finance cards
+   - chart wrappers
+   - skeleton system
+
+2. Core Page Rebuild Order
+   - Dashboard
+   - Salary Slips
+   - Cashflow
+   - Scenarios
+   - Investments
+   - AI Assistant
+   - Policies
+   - News
+   - Audit
+   - Settings
+
+3. Stabilization
+   - typing cleanup
+   - toast and error states
+   - responsive polish
+   - chart accessibility
+   - loading states
+
+
+Detailed Delivery Roadmap
+
+Phase 1: Visual System and Shell
+Goal
+- Establish a premium, consistent base before rewriting screens
+
+Tasks
+- Define semantic color tokens for both themes
+- Add theme switcher and provider
+- Redesign sidebar, header, and sticky context bar
+- Upgrade shadcn primitives: cards, buttons, tabs, tables, dialogs, badges, inputs
+- Add chart theme wrappers and tooltip style
+- Add skeleton components and empty state components
+
+Outcome
+- App shell feels premium even before every page is rebuilt
+
+
+Phase 2: Dashboard and Salary Flow
+Goal
+- First impression and first real data input flow must be excellent
+
+Tasks
+- Build dashboard KPI strip and next-step insight engine
+- Implement dashboard charts and trust row
+- Rebuild salary list, upload, and verify screens
+- Add upload progress and verification UX
+
+Outcome
+- New user can land, upload income, and see the system begin to populate
+
+
+Phase 3: Cashflow Workflow
+Goal
+- Help user build a realistic financial baseline
+
+Tasks
+- Rebuild expenses tab with category forms and recurring structure UI
+- Rebuild goals tab with emergency fund emphasis and goal modal
+- Rebuild forecast tab with horizon controls, charts, assumptions, and risk month explanations
+
+Outcome
+- Dashboard becomes meaningful with income + expenses + forecast + goals
+
+
+Phase 4: Scenarios and Investments
+Goal
+- Turn baseline data into planning and decision support
+
+Tasks
+- Build template scenario cards and custom builder modal
+- Build scenario comparison charts and active scenario banner
+- Build investments page with bucket plan, projection chart, and recommendation explainability cards
+
+Outcome
+- User can answer “what if” and “what should I do next with my savings?”
+
+
+Phase 5: Assistant, Policies, News, Audit
+Goal
+- Complete trust and explainability loop
+
+Tasks
+- Rebuild assistant thread and source panels
+- Build policy search/detail workflow
+- Build news list, summarize flow, and assistant handoff
+- Build audit list/detail with expandable sections and traceability visuals
+
+Outcome
+- AI outputs feel inspectable and grounded rather than magical
+
+
+Phase 6: Settings, Polish, and Reliability
+Goal
+- Finish product-quality experience
+
+Tasks
+- Rebuild settings with privacy controls
+- Add toast notifications everywhere needed
+- Add route-level error boundaries
+- Add mobile responsiveness pass
+- Add keyboard accessibility pass
+- Add loading and empty-state polish across all routes
+- Run type check and lint cleanup
+
+Outcome
+- Production-quality frontend behavior and consistency
+
+
+How to Make Each Page Feel Filled Even Early
+1. Use derived summaries from existing API data
+   If backend lacks a dedicated summary endpoint for a page, derive aggregates in the frontend from list endpoints.
+
+2. Design rich empty states, not blank surfaces
+   Each empty state should still teach the user what the system will show once data exists.
+
+3. Use trust panels as meaningful content
+   Even before all charts are populated, freshness, assumptions, privacy, and explanation panels make the product feel complete.
+
+4. Stage chart density progressively
+   Start with one high-value chart per page, then add secondary charts once data model support is stable.
+
+5. Keep the context bar informative
+   Even a partially configured app should show what is missing and what is active.
+
+
+API-to-Page Mapping Summary
+- Dashboard page:
+  - /v1/dashboard/summary
+  - /v1/salary
+  - /v1/expenses
+  - /v1/goals
+  - /v1/forecast
+
+- Salary pages:
+  - /v1/salary/upload
+  - /v1/salary
+  - /v1/salary/{id}
+  - /v1/salary/{id}/status
+  - /v1/salary/verify
+
+- Cashflow page:
+  - /v1/expenses
+  - /v1/goals
+  - /v1/forecast
+  - /v1/forecast/generate
+
+- Scenarios page:
+  - /v1/scenarios
+  - /v1/scenarios/{id}/activate
+  - /v1/scenarios/compare
+
+- Investments page:
+  - /v1/recommendations
+  - /v1/recommendations/generate
+
+- Assistant page:
+  - /v1/assistant/query
+  - /v1/voice/query
+
+- Policies page:
+  - /v1/policies
+  - /v1/policies/{id}
+  - /v1/policies/{id}/subscribe
+
+- News page:
+  - /v1/news
+  - /v1/news/{id}
+  - /v1/news/{id}/summarize
+
+- Audit page:
+  - /v1/audit
+  - /v1/audit/{id}
+
+- Settings page:
+  - /v1/settings
+
+
+Success Criteria for Frontend Redesign
+- The app looks premium in both light and dark mode
+- Each page has a clear primary action
+- Data origin and freshness are visible on key surfaces
+- Empty states feel intentional and helpful
+- Assistant and recommendations expose evidence and audit links
+- Charts are readable and attractive
+- The product feels like a serious finance tool, not a template admin dashboard
+
+
+Final Note
+The best delivery strategy is not to beautify page by page independently. Build the shell, tokens, trust patterns, chart language, and empty-state system first. After that, each page becomes a composition problem rather than a styling problem. That is what will make the entire app feel coherent and high-end rather than partly redesigned.

@@ -21,8 +21,11 @@ def get_settings(user_id: str = Depends(get_current_user_id)):
         user_id=doc["user_id"],
         currency=doc.get("currency", "INR"),
         locale=doc.get("locale", "en-IN"),
-        theme=doc.get("theme", "light"),
+        theme=doc.get("theme", "system"),
         notifications=doc.get("notifications", True),
+        risk_profile=doc.get("risk_profile", "balanced"),
+        store_salary_files=doc.get("store_salary_files", True),
+        store_voice_transcripts=doc.get("store_voice_transcripts", True),
     )
 
 
@@ -32,4 +35,13 @@ def update_settings(body: SettingsIn, user_id: str = Depends(get_current_user_id
     update = body.model_dump()
     update["user_id"] = user_id
     db["settings"].update_one({"user_id": user_id}, {"$set": update}, upsert=True)
-    return SettingsOut(**update)
+    return SettingsOut(
+        user_id=user_id,
+        currency=update.get("currency", "INR"),
+        locale=update.get("locale", "en-IN"),
+        theme=update.get("theme", "system"),
+        notifications=update.get("notifications", True),
+        risk_profile=update.get("risk_profile", "balanced"),
+        store_salary_files=update.get("store_salary_files", True),
+        store_voice_transcripts=update.get("store_voice_transcripts", True),
+    )

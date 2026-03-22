@@ -4,32 +4,135 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 120 18% 98%;
+    --foreground: 150 16% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --card-foreground: 150 16% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 16% 10%;
+    --primary: 148 53% 34%;
+    --primary-foreground: 120 20% 98%;
+    --secondary: 140 15% 94%;
+    --secondary-foreground: 150 18% 14%;
+    --muted: 150 12% 95%;
+    --muted-foreground: 145 10% 36%;
+    --accent: 146 33% 90%;
+    --accent-foreground: 150 18% 14%;
+    --destructive: 0 72% 53%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 145 14% 87%;
+    --input: 145 16% 88%;
+    --ring: 148 53% 34%;
+    --success: 148 56% 40%;
+    --warning: 39 92% 50%;
+    --danger: 0 72% 53%;
+    --chart-1: 148 53% 34%;
+    --chart-2: 160 46% 26%;
+    --chart-3: 185 52% 42%;
+    --chart-4: 45 90% 52%;
+    --chart-5: 8 77% 60%;
+    --radius: 1.25rem;
+    --sidebar: 120 24% 97%;
+    --sidebar-foreground: 150 16% 10%;
+    --sidebar-border: 144 16% 88%;
+    --sidebar-accent: 146 33% 92%;
+    --shadow-color: 145 45% 18%;
+  }
+
+  .dark {
+    --background: 155 22% 7%;
+    --foreground: 120 20% 95%;
+    --card: 153 18% 10%;
+    --card-foreground: 120 20% 95%;
+    --popover: 153 18% 10%;
+    --popover-foreground: 120 20% 95%;
+    --primary: 144 58% 48%;
+    --primary-foreground: 150 20% 8%;
+    --secondary: 151 14% 16%;
+    --secondary-foreground: 120 12% 90%;
+    --muted: 152 11% 15%;
+    --muted-foreground: 145 10% 68%;
+    --accent: 150 17% 19%;
+    --accent-foreground: 120 20% 95%;
+    --destructive: 0 70% 57%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 153 14% 18%;
+    --input: 153 14% 18%;
+    --ring: 144 58% 48%;
+    --success: 144 58% 48%;
+    --warning: 39 92% 56%;
+    --danger: 0 70% 57%;
+    --chart-1: 144 58% 48%;
+    --chart-2: 165 58% 38%;
+    --chart-3: 187 54% 48%;
+    --chart-4: 47 96% 60%;
+    --chart-5: 10 85% 64%;
+    --sidebar: 155 24% 8%;
+    --sidebar-foreground: 120 20% 95%;
+    --sidebar-border: 153 14% 18%;
+    --sidebar-accent: 150 18% 15%;
+    --shadow-color: 148 50% 3%;
   }
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.13), transparent 28%),
+      radial-gradient(circle at top right, hsl(var(--chart-3) / 0.08), transparent 22%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)) 42%, hsl(var(--muted) / 0.35));
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight text-balance;
+  }
+
+  p {
+    @apply text-pretty;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.92), hsl(var(--card) / 0.86));
+    backdrop-filter: blur(18px);
+  }
+
+  .mesh-card {
+    background-image:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.16), transparent 26%),
+      radial-gradient(circle at bottom left, hsl(var(--chart-3) / 0.12), transparent 22%);
+  }
+
+  .section-grid {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.25) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.25) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .soft-shadow {
+    box-shadow:
+      0 20px 50px -24px hsl(var(--shadow-color) / 0.35),
+      0 10px 20px -18px hsl(var(--shadow-color) / 0.2);
   }
 }

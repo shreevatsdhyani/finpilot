@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
 from app.core.security import get_current_user_id
 from app.db.mongo import get_db
-from app.models.salary import SalaryDocOut, SalaryVerifyRequest
+from app.models.salary import SalaryDocOut, SalaryManualRequest, SalaryVerifyRequest
 from app.services.ocr import extract_salary_data
 
 router = APIRouter(prefix="/v1/salary", tags=["salary"])
@@ -57,6 +57,61 @@ async def upload_salary(file: UploadFile, user_id: str = Depends(get_current_use
         "user_id": user_id,
         "filename": file.filename,
         "status": "extracted",
+        "extracted": extracted,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    result = db["salary_docs"].insert_one(doc)
+    doc["_id"] = result.inserted_id
+    return _doc_to_out(doc)
+
+
+@router.post("/manual", response_model=SalaryDocOut, status_code=status.HTTP_201_CREATED)
+def create_manual_salary(body: SalaryManualRequest, user_id: str = Depends(get_current_user_id)):
+    db = get_db()
+    month = body.month or datetime.now(timezone.utc).strftime("%Y-%m")
+
+    # Build comprehensive extracted dict — only include non-None values
+    extracted = {
+        "month": month,
+        "source": "manual",
+        # Core
+        "net_take_home": body.net_take_home,
+        # Source metadata
+        "income_source_type": body.income_source_type,
+        "employer_name": body.employer_name,
+        "pay_frequency": body.pay_frequency,
+        # Earnings breakdown
+        "ctc_annual": body.ctc_annual,
+        "gross_monthly": body.gross_monthly,
+        "basic": body.basic,
+        "hra": body.hra,
+        "da": body.da,
+        "special_allowance": body.special_allowance,
+        "other_allowances": body.other_allowances,
+        "performance_bonus": body.performance_bonus,
+        "variable_pay": body.variable_pay,
+        # Deductions
+        "pf_employee": body.pf_employee,
+        "professional_tax": body.professional_tax,
+        "income_tax_tds": body.income_tax_tds,
+        "esi_contribution": body.esi_contribution,
+        "other_deductions": body.other_deductions,
+        # Additional income sources
+        "additional_incomes": [inc.model_dump() for inc in body.additional_incomes] if body.additional_incomes else [],
+    }
+
+    # Compute total monthly income (net + additional sources)
+    total_additional = sum(inc.monthly_amount for inc in body.additional_incomes)
+    extracted["total_additional_income"] = total_additional
+    extracted["total_monthly_income"] = body.net_take_home + total_additional
+
+    # Strip None values for cleaner storage
+    extracted = {k: v for k, v in extracted.items() if v is not None}
+
+    doc = {
+        "user_id": user_id,
+        "filename": f"manual-income-{month}",
+        "status": "verified",
         "extracted": extracted,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }

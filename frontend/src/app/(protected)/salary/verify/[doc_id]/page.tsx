@@ -5,14 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorState, LoadingState } from "@/components/ui/shared";
+import { useReadiness } from "@/context/readiness-context";
 import { getSalary, verifySalary } from "@/lib/api";
 import type { SalaryDoc } from "@/types/api";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function SalaryVerifyPage() {
   const params = useParams();
   const router = useRouter();
+  const { refresh } = useReadiness();
   const docId = params.doc_id as string;
 
   const [doc, setDoc] = useState<SalaryDoc | null>(null);
@@ -41,6 +44,8 @@ export default function SalaryVerifyPage() {
     setSaving(true);
     try {
       await verifySalary(docId, fields);
+      toast.success("Income verified. Forecasting accuracy has improved.");
+      await refresh();
       router.push("/salary");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Verification failed");

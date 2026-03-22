@@ -17,11 +17,22 @@ def dashboard_summary(user_id: str = Depends(get_current_user_id)):
     salary_docs = db["salary_docs"].count_documents({"user_id": user_id})
     expenses = list(db["expenses"].find({"user_id": user_id}))
     goals = db["goals"].count_documents({"user_id": user_id})
-    total_expenses = sum(e.get("amount", 0) for e in expenses)
 
-    # sum net_salary from verified salary docs
+    # sum income from verified salary docs — prefer total_monthly_income, fall back to net_take_home / net_salary
     salaries = list(db["salary_docs"].find({"user_id": user_id, "status": "verified"}))
-    total_income = sum(s.get("extracted", {}).get("net_salary", 0) for s in salaries)
+    total_income = 0.0
+    for s in salaries:
+        ext = s.get("extracted", {})
+        income = ext.get("total_monthly_income") or ext.get("net_take_home") or ext.get("net_salary") or 0
+        total_income += income
+
+    # Normalize expenses to monthly amounts based on frequency
+    freq_divisors = {"monthly": 1, "quarterly": 3, "semi-annual": 6, "annual": 12}
+    total_expenses = 0.0
+    for e in expenses:
+        freq = e.get("frequency", "monthly")
+        divisor = freq_divisors.get(freq, 1)
+        total_expenses += e.get("amount", 0) / divisor
 
     # risk months from latest forecast
     latest_forecast = db["forecasts"].find_one({"user_id": user_id}, sort=[("_id", -1)])

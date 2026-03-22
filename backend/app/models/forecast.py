@@ -14,6 +14,7 @@ class ForecastMonth(BaseModel):
     projected_income: float
     projected_expenses: float
     net: float
+    cumulative_savings: float = 0.0
     risk: bool = False  # True if net < 0
 
 
@@ -22,4 +23,6 @@ class ForecastOut(BaseModel):
     user_id: str
     horizon: int
     months: list[ForecastMonth]
+    risk_month_count: int = 0
+    model_version: str = "v1_linear"
     created_at: str | None = None

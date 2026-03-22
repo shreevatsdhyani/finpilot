@@ -64,41 +64,41 @@ export const MOCK_GOALS: Goal[] = [
 ];
 
 const forecastMonths: ForecastMonth[] = [
-  { month: "2026-03", projected_income: 73000, projected_expenses: 45000, net: 28000, risk: false },
-  { month: "2026-04", projected_income: 73000, projected_expenses: 46000, net: 27000, risk: false },
-  { month: "2026-05", projected_income: 73000, projected_expenses: 48000, net: 25000, risk: false },
-  { month: "2026-06", projected_income: 73000, projected_expenses: 50000, net: 23000, risk: false },
-  { month: "2026-07", projected_income: 73000, projected_expenses: 55000, net: 18000, risk: false },
-  { month: "2026-08", projected_income: 73000, projected_expenses: 78000, net: -5000, risk: true },
+  { month: "2026-03", projected_income: 73000, projected_expenses: 45000, net: 28000, cumulative_savings: 28000, risk: false },
+  { month: "2026-04", projected_income: 73000, projected_expenses: 46000, net: 27000, cumulative_savings: 55000, risk: false },
+  { month: "2026-05", projected_income: 73000, projected_expenses: 48000, net: 25000, cumulative_savings: 80000, risk: false },
+  { month: "2026-06", projected_income: 73000, projected_expenses: 50000, net: 23000, cumulative_savings: 103000, risk: false },
+  { month: "2026-07", projected_income: 73000, projected_expenses: 55000, net: 18000, cumulative_savings: 121000, risk: false },
+  { month: "2026-08", projected_income: 73000, projected_expenses: 78000, net: -5000, cumulative_savings: 116000, risk: true },
 ];
 
 export const MOCK_FORECASTS: Forecast[] = [
-  { id: "fc-1", user_id: "mock-user-1", horizon: 6, months: forecastMonths, created_at: "2026-02-28T08:00:00Z" },
+  { id: "fc-1", user_id: "mock-user-1", horizon: 6, months: forecastMonths, risk_month_count: 1, model_version: "v1_linear", created_at: "2026-02-28T08:00:00Z" },
 ];
 
 export const MOCK_SCENARIOS: Scenario[] = [
   {
     id: "sc-1", user_id: "mock-user-1", name: "Raise +10%", description: "What if I get a 10% raise?",
-    adjustments: { income_change_pct: 10, expense_change_pct: 0 }, active: true,
-    result: { adjusted_monthly_income: 80300, adjusted_monthly_expense: 45000, monthly_net: 35300, horizon: 6, projected_savings: 211800, risk: false },
+    adjustments: { income_change_pct: 10, expense_change_pct: 0 }, horizon: 6, active: true,
+    result: { adjusted_monthly_income: 80300, adjusted_monthly_expense: 45000, monthly_net: 35300, horizon: 6, projected_savings: 211800, risk_month_count: 0, risk: false, months: [] },
   },
   {
     id: "sc-2", user_id: "mock-user-1", name: "Expense +20%", description: "What if expenses rise 20%?",
-    adjustments: { income_change_pct: 0, expense_change_pct: 20 }, active: false,
-    result: { adjusted_monthly_income: 73000, adjusted_monthly_expense: 54000, monthly_net: 19000, horizon: 6, projected_savings: 114000, risk: false },
+    adjustments: { income_change_pct: 0, expense_change_pct: 20 }, horizon: 6, active: false,
+    result: { adjusted_monthly_income: 73000, adjusted_monthly_expense: 54000, monthly_net: 19000, horizon: 6, projected_savings: 114000, risk_month_count: 0, risk: false, months: [] },
   },
 ];
 
 const mockBuckets: Bucket[] = [
-  { name: "Emergency Fund", allocation_pct: 20, rationale: "Continue building safety net." },
-  { name: "Fixed Income", allocation_pct: 30, rationale: "Stable returns, low risk." },
-  { name: "Equities", allocation_pct: 35, rationale: "Long-term growth." },
-  { name: "Gold / Commodities", allocation_pct: 10, rationale: "Hedge against inflation." },
-  { name: "Cash / Liquid", allocation_pct: 5, rationale: "Short-term liquidity." },
+  { name: "Emergency Fund", allocation_pct: 20, allocation_amount: 4600, rationale: "Continue building safety net.", instruments: ["Savings Account", "Liquid Fund"] },
+  { name: "Fixed Income", allocation_pct: 30, allocation_amount: 6900, rationale: "Stable returns, low risk.", instruments: ["FD", "PPF"] },
+  { name: "Equities", allocation_pct: 35, allocation_amount: 8050, rationale: "Long-term growth.", instruments: ["Nifty 50 Index Fund", "Flexi Cap"] },
+  { name: "Gold / Commodities", allocation_pct: 10, allocation_amount: 2300, rationale: "Hedge against inflation.", instruments: ["Gold ETF", "SGB"] },
+  { name: "Cash / Liquid", allocation_pct: 5, allocation_amount: 1150, rationale: "Short-term liquidity.", instruments: ["Savings Account"] },
 ];
 
 export const MOCK_RECOMMENDATIONS: Recommendation[] = [
-  { id: "rec-1", user_id: "mock-user-1", safe_to_invest: 23000, buckets: mockBuckets, created_at: "2026-02-28T09:00:00Z" },
+  { id: "rec-1", user_id: "mock-user-1", safe_to_invest: 23000, risk_profile: "moderate", buckets: mockBuckets, inputs_snapshot: { monthly_income: 73000, monthly_expense: 45000, emergency_gap: 5000 }, created_at: "2026-02-28T09:00:00Z" },
 ];
 
 export const MOCK_ASSISTANT_RESPONSE: AssistantResponse = {
@@ -120,11 +120,11 @@ export const MOCK_VOICE_RESPONSE: VoiceResponse = {
 };
 
 export const MOCK_POLICIES: Policy[] = [
-  { id: "pol-1", title: "Emergency Fund Policy", body: "Maintain at least 6 months of essential expenses in a liquid savings account before allocating to higher-risk investments.", category: "savings" },
-  { id: "pol-2", title: "Debt Repayment Priority", body: "Prioritise paying off high-interest debt (>8% APR) before investing surplus income.", category: "debt" },
-  { id: "pol-3", title: "Diversification Guideline", body: "Spread investments across at least three asset classes: equities, fixed income, and cash equivalents.", category: "investment" },
-  { id: "pol-4", title: "Insurance Adequacy", body: "Ensure term life cover equals at least 10x annual income. Health insurance should cover the whole family.", category: "insurance" },
-  { id: "pol-5", title: "Tax-Advantaged Accounts", body: "Maximise contributions to tax-advantaged retirement accounts (e.g., 401k, PPF, NPS) before taxable investments.", category: "tax" },
+  { id: "pol-1", title: "Section 80C – Deductions on Investments", summary: "Up to ₹1.5 lakh per year can be deducted from taxable income via specified instruments like PPF, ELSS, and EPF.", body: "Under Section 80C of the Income Tax Act, 1961, individual taxpayers and HUFs can claim deductions up to ₹1,50,000 per financial year. Eligible instruments include Public Provident Fund (PPF), Equity-Linked Savings Schemes (ELSS), Employee Provident Fund (EPF), National Savings Certificates (NSC), 5-year fixed deposits, Sukanya Samriddhi Yojana, and life insurance premiums.", category: "tax", tags: ["80C", "tax saving", "PPF", "ELSS"], region: "India", source_url: "https://incometaxindia.gov.in/Pages/acts/income-tax-act.aspx", source_name: "Income Tax Department", published_at: "2024-04-01", effective_from: "2024-04-01", last_updated: "2025-01-01", version: 1 },
+  { id: "pol-2", title: "Emergency Fund – 6 Months of Expenses", summary: "Maintain 6 months of essential expenses in a liquid savings/sweep account before investing in volatile assets.", body: "An emergency fund is the foundation of sound financial planning. It protects against job loss, medical emergencies, and unexpected expenses. The recommended size is 6 months of essential monthly expenses.", category: "savings", tags: ["emergency fund", "liquid fund", "savings"], region: "India", source_url: "https://www.rbi.org.in/financialeducation/", source_name: "RBI Financial Literacy", published_at: "2024-01-01", effective_from: "2024-01-01", last_updated: "2025-01-01", version: 1 },
+  { id: "pol-3", title: "Term Life Insurance – Adequate Cover Guideline", summary: "Ensure term life cover equals at least 10-15x annual income to protect dependents.", body: "Term life insurance provides a death benefit to nominees. Financial planners recommend a cover of at least 10-15 times annual income. Pure term plans are the most cost-effective form of life insurance.", category: "insurance", tags: ["term insurance", "life cover", "80C"], region: "India", source_url: "https://www.irdai.gov.in/", source_name: "IRDAI", published_at: "2024-01-15", effective_from: "2024-01-15", last_updated: "2025-01-01", version: 1 },
+  { id: "pol-4", title: "Credit Score – CIBIL Score Importance", summary: "A CIBIL score of 750+ is essential for loan approvals at competitive interest rates.", body: "Your CIBIL score ranges from 300 to 900 and is the primary factor used by banks to evaluate creditworthiness. Key factors include payment history (35%), credit utilisation (30%), credit mix, and credit age.", category: "credit", tags: ["CIBIL", "credit score", "loan"], region: "India", source_url: "https://www.cibil.com/", source_name: "TransUnion CIBIL", published_at: "2024-03-01", effective_from: "2024-03-01", last_updated: "2025-01-01", version: 1 },
+  { id: "pol-5", title: "SIP in Equity Mutual Funds", summary: "SIP allows disciplined monthly investing in mutual funds, averaging purchase cost over market cycles.", body: "A Systematic Investment Plan lets investors put a fixed amount into a mutual fund scheme every month. For long-term wealth creation (7+ years), equity mutual funds via SIP have historically delivered 12-15% CAGR.", category: "investing", tags: ["SIP", "mutual funds", "equity", "ELSS"], region: "India", source_url: "https://www.sebi.gov.in/", source_name: "SEBI", published_at: "2024-08-01", effective_from: "2024-08-01", last_updated: "2025-01-01", version: 1 },
 ];
 
 export const MOCK_NEWS: NewsItem[] = [
@@ -142,6 +142,9 @@ export const MOCK_SETTINGS: UserSettings = {
   user_id: "mock-user-1",
   currency: "INR",
   locale: "en-IN",
-  theme: "light",
+  theme: "system",
   notifications: true,
+  risk_profile: "balanced",
+  store_salary_files: true,
+  store_voice_transcripts: true,
 };

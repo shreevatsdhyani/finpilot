@@ -6,15 +6,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge, EmptyState, ErrorState, LoadingState } from "@/components/ui/shared";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useReadiness } from "@/context/readiness-context";
 import { createExpense, createGoal, generateForecast, listExpenses, listGoals } from "@/lib/api";
 import type { Expense, Forecast, Goal } from "@/types/api";
-import { useEffect, useState } from "react";
+import { AlertTriangle, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  PieChart, Pie, Cell, BarChart, Bar,
+} from "recharts";
+
+const COLORS = ["#6366f1", "#f43f5e", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
 
 export default function CashFlowPage() {
+  const searchParams = useSearchParams();
+  const { flags } = useReadiness();
+  const initialTab = searchParams.get("tab") === "expenses" || searchParams.get("tab") === "goals" ? searchParams.get("tab")! : "forecast";
+
   return (
-    <div>
+    <div className="space-y-4">
       <h1 className="mb-6 text-2xl font-bold">Cash Flow</h1>
-      <Tabs defaultValue="forecast">
+      {flags.incomeExists && !flags.incomeVerified ? (
+        <div className="flex items-center gap-2 rounded-[1.25rem] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          <AlertTriangle className="h-4 w-4" />
+          Income not verified yet — forecasts may be less accurate.
+        </div>
+      ) : null}
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="forecast">Forecast</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -28,7 +47,7 @@ export default function CashFlowPage() {
   );
 }
 
-/* ---- Forecast Tab ---- */
+/* ---- Forecast Tab with Chart ---- */
 function ForecastTab() {
   const [forecast, setForecast] = useState<Forecast | null>(null);
   const [horizon, setHorizon] = useState(6);
@@ -48,6 +67,15 @@ function ForecastTab() {
     }
   }
 
+  const summaryCards = useMemo(() => {
+    if (!forecast) return null;
+    const months = forecast.months;
+    const avgNet = months.reduce((s, m) => s + m.net, 0) / months.length;
+    const totalSaved = months[months.length - 1]?.cumulative_savings ?? 0;
+    const riskCount = months.filter(m => m.risk).length;
+    return { avgNet, totalSaved, riskCount };
+  }, [forecast]);
+
   return (
     <div className="mt-4 space-y-4">
       <div className="flex items-end gap-4">
@@ -66,10 +94,101 @@ function ForecastTab() {
         <Button onClick={generate} disabled={loading}>{loading ? "Generating…" : "Generate Forecast"}</Button>
       </div>
       {error && <ErrorState message={error} />}
+
+      {/* Summary KPIs */}
+      {summaryCards && (
+        <div className="grid grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="flex items-center gap-3 py-4">
+              <div className="rounded-xl bg-blue-500/10 p-2"><TrendingUp className="h-5 w-5 text-blue-500" /></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Avg Monthly Net</p>
+                <p className="text-lg font-bold">₹{summaryCards.avgNet.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="flex items-center gap-3 py-4">
+              <div className="rounded-xl bg-green-500/10 p-2"><DollarSign className="h-5 w-5 text-green-500" /></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Saved</p>
+                <p className="text-lg font-bold">₹{summaryCards.totalSaved.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="flex items-center gap-3 py-4">
+              <div className={`rounded-xl p-2 ${summaryCards.riskCount > 0 ? "bg-red-500/10" : "bg-green-500/10"}`}>
+                <TrendingDown className={`h-5 w-5 ${summaryCards.riskCount > 0 ? "text-red-500" : "text-green-500"}`} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Risk Months</p>
+                <p className="text-lg font-bold">{summaryCards.riskCount} / {forecast?.months.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Area Chart */}
+      {forecast && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Income vs Expenses Projection</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={320}>
+              <AreaChart data={forecast.months} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
+                <Tooltip
+                  formatter={(value: number) => `₹${value.toLocaleString("en-IN")}`}
+                  contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)" }}
+                />
+                <Legend />
+                <Area type="monotone" dataKey="projected_income" name="Income" stroke="#10b981" fill="url(#incomeGrad)" strokeWidth={2} />
+                <Area type="monotone" dataKey="projected_expenses" name="Expenses" stroke="#f43f5e" fill="url(#expenseGrad)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Cumulative Savings Chart */}
+      {forecast && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Cumulative Savings Trajectory</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={forecast.months}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
+                <Tooltip
+                  formatter={(value: number) => `₹${value.toLocaleString("en-IN")}`}
+                  contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)" }}
+                />
+                <Bar dataKey="cumulative_savings" name="Cumulative Savings" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Month table */}
       {forecast && (
         <div className="space-y-2">
           {forecast.months.map((m) => (
-            <Card key={m.month} className={m.risk ? "border-red-300 bg-red-50" : ""}>
+            <Card key={m.month} className={m.risk ? "border-red-300 bg-red-50 dark:bg-red-950/20" : ""}>
               <CardContent className="flex items-center justify-between py-3">
                 <span className="font-medium">{m.month}</span>
                 <span className="text-green-600">+₹{m.projected_income.toLocaleString()}</span>
@@ -87,7 +206,7 @@ function ForecastTab() {
   );
 }
 
-/* ---- Expenses Tab ---- */
+/* ---- Expenses Tab with Donut Chart ---- */
 function ExpensesTab() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +219,14 @@ function ExpensesTab() {
   useEffect(() => {
     listExpenses().then(setExpenses).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, []);
+
+  const pieData = useMemo(() => {
+    const groups = new Map<string, number>();
+    for (const exp of expenses) {
+      groups.set(exp.category, (groups.get(exp.category) ?? 0) + exp.amount);
+    }
+    return Array.from(groups.entries()).map(([name, value]) => ({ name, value }));
+  }, [expenses]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -134,6 +261,44 @@ function ExpensesTab() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Pie chart breakdown */}
+      {pieData.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Expense Breakdown by Category</CardTitle></CardHeader>
+          <CardContent className="flex flex-col sm:flex-row items-center gap-6">
+            <ResponsiveContainer width={260} height={260}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {pieData.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `₹${value.toLocaleString("en-IN")}`} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-2">
+              {pieData.map((item, i) => (
+                <div key={item.name} className="flex items-center gap-2 text-sm">
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                  <span>{item.name}</span>
+                  <span className="ml-auto font-medium">₹{item.value.toLocaleString("en-IN")}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {expenses.length === 0 ? (
         <EmptyState message="No expenses recorded yet." />
       ) : (

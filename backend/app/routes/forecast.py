@@ -24,18 +24,26 @@ def create_forecast(body: ForecastRequest, user_id: str = Depends(get_current_us
     salaries = list(db["salary_docs"].find({"user_id": user_id, "status": "verified"}))
     expenses = list(db["expenses"].find({"user_id": user_id}))
     avg_income = (
-        sum(s.get("extracted", {}).get("net_salary", 0) for s in salaries) / max(len(salaries), 1)
+        sum(s.get("extracted", {}).get("net_salary", 0) or s.get("extracted", {}).get("net_take_home", 0) for s in salaries) / max(len(salaries), 1)
     )
     avg_expense = sum(e.get("amount", 0) for e in expenses) / max(len(expenses), 1) if expenses else avg_income * 0.6
 
     months = generate_forecast(avg_income or 70000, avg_expense or 42000, body.horizon)
+    risk_month_count = sum(1 for m in months if m.get("risk"))
     doc = {
         "user_id": user_id,
         "horizon": body.horizon,
         "months": months,
+        "risk_month_count": risk_month_count,
+        "model_version": "v1_linear",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     result = db["forecasts"].insert_one(doc)
+
+    # Auto-generate alerts based on new forecast
+    from app.services.alerts import check_and_create_alerts
+    check_and_create_alerts(db, user_id)
+
     return ForecastOut(id=str(result.inserted_id), **doc)
 
 

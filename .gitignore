@@ -3,12 +3,28 @@
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# IDE specific
+*.iml
+.gradle/
 
 # Env files and secrets
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
 !.env.local.example
+
+# Database files (local dev)
+*.db
+*.sqlite
+*.sqlite3
 
 # Python
 __pycache__/
@@ -21,6 +37,12 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+*.egg-info/
+*.egg
+dist/
+build/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Virtual environments
 venv/

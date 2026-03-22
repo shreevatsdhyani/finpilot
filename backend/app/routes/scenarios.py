@@ -22,6 +22,7 @@ def _doc_to_out(d: dict) -> ScenarioOut:
         name=d["name"],
         description=d.get("description", ""),
         adjustments=d.get("adjustments", {}),
+        horizon=d.get("horizon", 6),
         active=d.get("active", False),
         result=d.get("result"),
     )
@@ -33,15 +34,16 @@ def create_scenario(body: ScenarioIn, user_id: str = Depends(get_current_user_id
     # compute result
     salaries = list(db["salary_docs"].find({"user_id": user_id, "status": "verified"}))
     expenses_docs = list(db["expenses"].find({"user_id": user_id}))
-    avg_income = sum(s.get("extracted", {}).get("net_salary", 0) for s in salaries) / max(len(salaries), 1) if salaries else 70000
+    avg_income = sum(s.get("extracted", {}).get("net_salary", 0) or s.get("extracted", {}).get("net_take_home", 0) for s in salaries) / max(len(salaries), 1) if salaries else 70000
     avg_expense = sum(e.get("amount", 0) for e in expenses_docs) / max(len(expenses_docs), 1) if expenses_docs else 42000
-    result = apply_scenario(avg_income, avg_expense, body.adjustments)
+    result = apply_scenario(avg_income, avg_expense, body.adjustments, body.horizon)
 
     doc = {
         "user_id": user_id,
         "name": body.name,
         "description": body.description,
         "adjustments": body.adjustments,
+        "horizon": body.horizon,
         "active": False,
         "result": result,
         "created_at": datetime.now(timezone.utc).isoformat(),

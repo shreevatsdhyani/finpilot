@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.db.mongo import get_db, seed_news, seed_policies
+from app.db.mongo import get_db, seed_auth_access_credentials, seed_news, seed_policies
 
 # Import routers
 from app.routes import (
@@ -26,6 +26,8 @@ from app.routes import (
     scenarios,
     settings as settings_route,
     salary,
+    alerts,
+    chat,
 )
 
 
@@ -34,6 +36,7 @@ async def lifespan(app: FastAPI):
     # Startup: seed DB (graceful if Mongo is not yet ready)
     try:
         db = get_db()
+        seed_auth_access_credentials(db)
         seed_policies(db)
         seed_news(db)
         print("[OK] MongoDB connected & seeded")
@@ -80,6 +83,8 @@ app.include_router(policies.router)
 app.include_router(news.router)
 app.include_router(audit.router)
 app.include_router(settings_route.router)
+app.include_router(alerts.router)
+app.include_router(chat.router)
 
 
 @app.get("/health")
